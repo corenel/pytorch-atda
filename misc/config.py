@@ -11,17 +11,25 @@ dataset_std = (dataset_std_value, dataset_std_value, dataset_std_value)
 batch_size = 50
 image_size = 64
 
-# params for F
-F_model_restore = None
+# params for encoder (F)
+model_restore = {
+    "F": None,
+    "F1": None,
+    "F2": None,
+    "Ft": None
+}
 
-# params for F1
-F1_model_restore = None
-
-# params for F2
-F2_model_restore = None
-
-# params for Ft
-Ft_model_restore = None
+# params for classifier(F1, F2, Ft)
+dropout_keep = {
+    "F1": 0.5,
+    "F2": 0.5,
+    "Ft": 0.2,
+}
+conv_dims = {
+    "input": 768,
+    "hidden": 100,
+    "output": 10
+}
 
 # params for training network
 num_gpu = 1
@@ -33,6 +41,6 @@ model_root = "snapshots"
 eval_only = False
 
 # params for optimizing models
-learning_rate = 1e-4
-beta1 = 0.5
-beta2 = 0.9
+learning_rate = 1e-2
+beta1 = 0.9
+beta2 = 0.999
