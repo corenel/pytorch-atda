@@ -14,7 +14,7 @@ import torch
 import torch.utils.data as data
 from torchvision import transforms
 
-from misc import params
+from misc import config as cfg
 
 
 class USPS(data.Dataset):
@@ -119,18 +119,18 @@ def get_usps(train):
     # image pre-processing
     pre_process = transforms.Compose([transforms.ToTensor(),
                                       transforms.Normalize(
-                                          mean=params.dataset_mean,
-                                          std=params.dataset_std)])
+                                          mean=cfg.dataset_mean,
+                                          std=cfg.dataset_std)])
 
     # dataset and data loader
-    usps_dataset = USPS(root=params.data_root,
+    usps_dataset = USPS(root=cfg.data_root,
                         train=train,
                         transform=pre_process,
                         download=True)
 
     usps_data_loader = torch.utils.data.DataLoader(
         dataset=usps_dataset,
-        batch_size=params.batch_size,
+        batch_size=cfg.batch_size,
         shuffle=True)
 
     return usps_data_loader
