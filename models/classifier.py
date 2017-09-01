@@ -45,7 +45,7 @@ class ClassifierA(nn.Module):
     def forward(self, input):
         """Forward classifier."""
         out = self.classifier(input)
-        return out.view(-1)
+        return out
 
 
 class ClassifierB(nn.Module):
@@ -67,7 +67,7 @@ class ClassifierB(nn.Module):
     def forward(self, input):
         """Forward classifier."""
         out = self.classifier(input)
-        return out.view(-1)
+        return out
 
 
 class ClassifierC(nn.Module):
@@ -105,4 +105,4 @@ class ClassifierC(nn.Module):
     def forward(self, input):
         """Forward classifier."""
         out = self.classifier(input)
-        return out.view(-1)
+        return out

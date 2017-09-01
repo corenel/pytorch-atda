@@ -34,7 +34,7 @@ class EncoderA(nn.Module):
     def forward(self, input):
         """Forward encoder."""
         out = self.encoder(input)
-        return out.view(-1)
+        return out.view(-1, 768)
 
 
 class EncoderB(nn.Module):
@@ -74,7 +74,7 @@ class EncoderB(nn.Module):
     def forward(self, input):
         """Forward encoder."""
         out = self.encoder(input)
-        return out.view(-1)
+        return out
 
 
 class EncoderC(nn.Module):
@@ -112,7 +112,7 @@ class EncoderC(nn.Module):
     def forward(self, input):
         """Forward encoder."""
         out = self.encoder(input)
-        return out.view(-1)
+        return out
 
 
 # class EncoderD(nn.Module):
@@ -148,4 +148,4 @@ class EncoderC(nn.Module):
 #     def forward(self, input):
 #         """Forward encoder."""
 #         out = self.encoder(input)
-#         return out.view(-1)
+#         return out.view(-1, 1)

@@ -1,4 +1,4 @@
-from .classifier import Classifier
-from .encoder import Encoder
+from .classifier import ClassifierA, ClassifierB, ClassifierC
+from .encoder import EncoderA, EncoderB, EncoderC
 
-__all__ = (Classifier, Encoder)
+__all__ = (ClassifierA, ClassifierB, ClassifierC, EncoderA, EncoderB, EncoderC)
