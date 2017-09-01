@@ -28,7 +28,7 @@ class ClassifierA(nn.Module):
                 nn.BatchNorm1d(100),
                 nn.ReLU(),
                 nn.Linear(100, 10),
-                nn.Softmax()
+                nn.LogSoftmax()
             )
         else:
             self.classifier = nn.Sequential(
@@ -39,13 +39,13 @@ class ClassifierA(nn.Module):
                 nn.Linear(100, 100),
                 nn.ReLU(),
                 nn.Linear(100, 10),
-                nn.Softmax()
+                nn.LogSoftmax()
             )
 
     def forward(self, input):
         """Forward classifier."""
         out = self.classifier(input)
-        return out.view()
+        return out.view(-1)
 
 
 class ClassifierB(nn.Module):
@@ -61,13 +61,13 @@ class ClassifierB(nn.Module):
             nn.Linear(3072, 2048),
             nn.ReLU(),
             nn.Linear(2048, 10),
-            nn.Softmax()
+            nn.LogSoftmax()
         )
 
     def forward(self, input):
         """Forward classifier."""
         out = self.classifier(input)
-        return out.view()
+        return out.view(-1)
 
 
 class ClassifierC(nn.Module):
@@ -90,7 +90,7 @@ class ClassifierC(nn.Module):
                 nn.Dropout(self.dropout_keep),
                 nn.Linear(2048, 10),
                 nn.BatchNorm1d(10),
-                nn.Softmax()
+                nn.LogSoftmax()
             )
         else:
             self.classifier = nn.Sequential(
@@ -99,10 +99,10 @@ class ClassifierC(nn.Module):
                 nn.ReLU(),
                 nn.Dropout(self.dropout_keep),
                 nn.Linear(2048, 10),
-                nn.Softmax()
+                nn.LogSoftmax()
             )
 
     def forward(self, input):
         """Forward classifier."""
         out = self.classifier(input)
-        return out.view()
+        return out.view(-1)

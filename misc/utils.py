@@ -110,3 +110,10 @@ def get_inf_iterator(data_loader):
     while True:
         for images, labels in data_loader:
             yield (images, labels)
+
+
+def get_model_params(net, name):
+    """Get parameters of models by name."""
+    for n, p in net.named_parameters():
+        if n == name:
+            return p
