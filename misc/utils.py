@@ -8,7 +8,7 @@ import torch.backends.cudnn as cudnn
 import torch.optim as optim
 from torch.autograd import Variable
 
-from datasets import get_mnist, get_usps
+from datasets import get_mnist, get_mnist_m, get_svhn, get_usps
 from misc import config as cfg
 
 
@@ -97,6 +97,10 @@ def get_data_loader(name, train=True):
     """Get data loader by name."""
     if name == "MNIST":
         return get_mnist(train)
+    elif name == "MNIST-M":
+        return get_mnist_m(train)
+    elif name == "SVHN":
+        return get_svhn(train)
     elif name == "USPS":
         return get_usps(train)
 

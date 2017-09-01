@@ -25,11 +25,6 @@ dropout_keep = {
     "F2": 0.5,
     "Ft": 0.2,
 }
-conv_dims = {
-    "input": 768,
-    "hidden": 100,
-    "output": 10
-}
 
 # params for training network
 num_gpu = 1
