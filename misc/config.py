@@ -41,6 +41,9 @@ model_root = "snapshots"
 eval_only = False
 
 # params for optimizing models
-learning_rate = 1e-2
+learning_rate = {
+    "SVHN<->MNIST": 0.05,
+    "other": 0.01
+}
 beta1 = 0.9
 beta2 = 0.999
