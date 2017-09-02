@@ -7,7 +7,7 @@ from torchvision import datasets, transforms
 from misc import config as cfg
 
 
-def get_svhn(train):
+def get_svhn(train, get_dataset=False):
     """Get SVHN dataset loader."""
     # image pre-processing
     pre_process = transforms.Compose([transforms.ToTensor(),
@@ -21,9 +21,11 @@ def get_svhn(train):
                                  transform=pre_process,
                                  download=True)
 
-    svhn_data_loader = torch.utils.data.DataLoader(
-        dataset=svhn_dataset,
-        batch_size=cfg.batch_size,
-        shuffle=True)
-
-    return svhn_data_loader
+    if get_dataset:
+        return svhn_dataset
+    else:
+        svhn_data_loader = torch.utils.data.DataLoader(
+            dataset=svhn_dataset,
+            batch_size=cfg.batch_size,
+            shuffle=True)
+        return svhn_data_loader

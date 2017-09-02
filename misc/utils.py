@@ -3,6 +3,7 @@
 import os
 import random
 
+import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
@@ -62,10 +63,7 @@ def init_model(net, restore):
     net.apply(init_weights)
 
     # restore model weights
-    if restore is not None and os.path.exists(restore):
-        net.load_state_dict(torch.load(restore))
-        net.restored = True
-        print("Restore model from: {}".format(os.path.abspath(restore)))
+    restore_model(net, restore)
 
     # check if cuda is available
     if torch.cuda.is_available():
@@ -85,6 +83,14 @@ def save_model(net, filename):
                                                              filename)))
 
 
+def restore_model(net, restore):
+    """Restore network from saved model."""
+    if restore is not None and os.path.exists(restore):
+        net.load_state_dict(torch.load(restore))
+        net.restored = True
+        print("Restore model from: {}".format(os.path.abspath(restore)))
+
+
 def get_optimizer(net, name="Adam"):
     """Get optimizer by name."""
     if name == "Adam":
@@ -93,16 +99,16 @@ def get_optimizer(net, name="Adam"):
                           betas=(cfg.beta1, cfg.beta2))
 
 
-def get_data_loader(name, train=True):
+def get_data_loader(name, train=True, get_dataset=False):
     """Get data loader by name."""
     if name == "MNIST":
-        return get_mnist(train)
+        return get_mnist(train, get_dataset)
     elif name == "MNIST-M":
-        return get_mnist_m(train)
+        return get_mnist_m(train, get_dataset)
     elif name == "SVHN":
-        return get_svhn(train)
+        return get_svhn(train, get_dataset)
     elif name == "USPS":
-        return get_usps(train)
+        return get_usps(train, get_dataset)
 
 
 def get_inf_iterator(data_loader):
@@ -117,3 +123,74 @@ def get_model_params(net, name):
     for n, p in net.named_parameters():
         if n == name:
             return p
+
+
+def calc_similiar_penalty(F_1, F_2):
+    """Calculate similiar penalty |W_1^T W_2|."""
+    F_1_params = get_model_params(F_1, "classifier.8.weight")
+    F_2_params = get_model_params(F_2, "classifier.8.weight")
+    similiar_penalty = torch.sum(
+        torch.abs(torch.mm(F_1_params.transpose(0, 1), F_2_params)))
+    return similiar_penalty
+
+
+def sample_candidatas(data, labels, candidates_num, shuffle=True):
+    """Sample images and labels from dataset."""
+    indices = np.arange(len(data))
+    if shuffle:
+        np.random.shuffle(indices)
+    excerpt = indices[0:candidates_num]
+    images = data[excerpt]
+    true_labels = labels[excerpt]
+    return images, true_labels
+
+
+def get_minibatch_iterator(images, labels, batchsize, shuffle=False):
+    """Get minibatch iterator with given images and labels."""
+    assert len(images) == len(labels), \
+        "Number of images and labels must be equal to make minibatches!"
+
+    if shuffle:
+        indices = np.arange(len(images))
+        np.random.shuffle(indices)
+
+    for start_idx in range(0, len(images), batchsize):
+        end_idx = start_idx + batchsize
+        if end_idx > len(images):
+            end_idx = start_idx + (len(images) % batchsize)
+
+        if shuffle:
+            excerpt = indices[start_idx:end_idx]
+        else:
+            excerpt = slice(start_idx, end_idx)
+
+        yield images[excerpt], labels[excerpt]
+
+
+def make_labels(labels_dense, num_classes):
+    """Convert dense labels into one-hot labels."""
+    num_labels = labels_dense.shape[0]
+    index_offset = np.arange(num_labels) * num_classes
+    labels_one_hot = np.zeros((num_labels, num_classes))
+    labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1.0
+    return labels_one_hot
+
+
+def guess_pseudo_labels(images, labels, out_1, out_2, threshold=0.9):
+    """Guess labels of target dataset by the two outputs."""
+    # find prediction who are the same in two outputs
+    equal_idx = np.equal(np.argmax(out_1, 1), np.argmax(out_2, 1))
+    out_1 = out_1[equal_idx]
+    out_2 = out_2[equal_idx]
+    images = images[equal_idx]
+    labels = labels[equal_idx]
+    # get prediction
+    pred_1 = np.max(out_1, 1)
+    pred_2 = np.max(out_2, 2)
+    # filter indices by threshold
+    filtered_idx = np.max(np.vstack(pred_1, pred_2), 0) > threshold
+    # get images, pseudo labels and true labels by indices
+    pseudo_labels = make_labels(
+        np.argmax(out_1[filtered_idx], 1), cfg.num_classes)
+
+    return images[filtered_idx], pseudo_labels, labels[filtered_idx]

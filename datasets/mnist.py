@@ -7,7 +7,7 @@ from torchvision import datasets, transforms
 from misc import config as cfg
 
 
-def get_mnist(train):
+def get_mnist(train, get_dataset=False):
     """Get MNIST dataset loader."""
     # image pre-processing
     pre_process = transforms.Compose([transforms.ToTensor(),
@@ -21,9 +21,11 @@ def get_mnist(train):
                                    transform=pre_process,
                                    download=True)
 
-    mnist_data_loader = torch.utils.data.DataLoader(
-        dataset=mnist_dataset,
-        batch_size=cfg.batch_size,
-        shuffle=True)
-
-    return mnist_data_loader
+    if get_dataset:
+        return mnist_dataset
+    else:
+        mnist_data_loader = torch.utils.data.DataLoader(
+            dataset=mnist_dataset,
+            batch_size=cfg.batch_size,
+            shuffle=True)
+        return mnist_data_loader

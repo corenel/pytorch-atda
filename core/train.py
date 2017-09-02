@@ -4,17 +4,9 @@ import torch
 from torch import nn
 
 from misc import config as cfg
-from misc.utils import (get_model_params, get_optimizer, make_variable,
-                        save_model)
-
-
-def calc_similiar_penalty(F_1, F_2):
-    """Calculate similiar penalty |W_1^T W_2|."""
-    F_1_params = get_model_params(F_1, "classifier.8.weight")
-    F_2_params = get_model_params(F_2, "classifier.8.weight")
-    similiar_penalty = torch.sum(
-        torch.abs(torch.mm(F_1_params.transpose(0, 1), F_2_params)))
-    return similiar_penalty
+from misc.utils import (calc_similiar_penalty, get_minibatch_iterator,
+                        get_optimizer, guess_pseudo_labels, make_variable,
+                        sample_candidatas, save_model)
 
 
 def pre_train(F, F_1, F_2, F_t, source_data):
@@ -95,9 +87,33 @@ def pre_train(F, F_1, F_2, F_t, source_data):
     save_model(F_t, "pretrain-F_t-final.pt")
 
 
-def labelling(F, F_1, F_2, targte_data):
+def genarate_labels(F, F_1, F_2, target_dataset):
     """Genrate pseudo labels for target domain dataset."""
-    pass
+    # set eval state for Dropout and BN layers
+    F.eval()
+    F_1.eval()
+    F_2.eval()
+
+    # get candidate samples
+    images_tgt, labels_tgt = sample_candidatas(
+        data=target_dataset.train_data,
+        labels=target_dataset.train_labels,
+        candidates_num=cfg.num_target_init,
+        shuffle=True)
+
+    # convert into torch.autograd.Variable
+    images_tgt = make_variable(images_tgt)
+    labels_tgt = make_variable(labels_tgt)
+
+    # forward networks
+    out_F_1 = F_1(F(images_tgt))
+    out_F_2 = F_2(F(images_tgt))
+
+    # guess pseudo labels
+    T_l, pseudo_labels, true_labels = guess_pseudo_labels(
+        images_tgt, labels_tgt, out_F_1.data.cpu(), out_F_2.data.cpu())
+
+    return T_l, pseudo_labels, true_labels
 
 
 def domain_adapt(F, F_1, F_2, F_t, labelled_data, target_data_labelled):

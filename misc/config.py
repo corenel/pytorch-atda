@@ -3,27 +3,33 @@
 # params for dataset and data loader
 data_root = "data"
 src_dataset = "MNIST"
-tgt_dataset = "USPS"
+tgt_dataset = "MNIST-M"
 dataset_mean_value = 0.5
 dataset_std_value = 0.5
 dataset_mean = (dataset_mean_value, dataset_mean_value, dataset_mean_value)
 dataset_std = (dataset_std_value, dataset_std_value, dataset_std_value)
 batch_size = 128
-image_size = 64
+image_size = 28
+num_classes = 10
 
 # params for encoder (F)
+model_trained = {
+    "pretrain": True,
+    "domain_adapt": False
+}
+
 model_restore = {
-    "F": None,
-    "F1": None,
-    "F2": None,
-    "Ft": None
+    "F": "snapshots/pretrain-F-final.pt",
+    "F_1": "snapshots/pretrain-F_1-final.pt",
+    "F_2": "snapshots/pretrain-F_2-final.pt",
+    "F_t": "snapshots/pretrain-F_t-final.pt"
 }
 
 # params for classifier(F1, F2, Ft)
 dropout_keep = {
-    "F1": 0.5,
-    "F2": 0.5,
-    "Ft": 0.2,
+    "F_1": 0.5,
+    "F_2": 0.5,
+    "F_t": 0.2,
 }
 
 # params for training network
