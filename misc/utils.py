@@ -2,11 +2,13 @@
 
 import os
 import random
+from math import log
 
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
+from PIL import Image
 from torch.autograd import Variable
 
 from datasets import get_mnist, get_mnist_m, get_svhn, get_usps
@@ -134,14 +136,28 @@ def calc_similiar_penalty(F_1, F_2):
     return similiar_penalty
 
 
-def sample_candidatas(data, labels, candidates_num, shuffle=True):
+def get_whole_dataset(dataset):
+    """Get all images and labels of dataset."""
+    data_loader = torch.utils.data.DataLoader(dataset=dataset,
+                                              batch_size=len(dataset))
+    for images, labels in data_loader:
+        return images, labels
+
+
+def sample_candidatas(dataset, candidates_num, shuffle=True):
     """Sample images and labels from dataset."""
-    indices = np.arange(len(data))
+    # get data and labels
+    data, labels = get_whole_dataset(dataset)
+    # get indices
+    indices = torch.arange(0, len(data))
     if shuffle:
-        np.random.shuffle(indices)
-    excerpt = indices[0:candidates_num]
-    images = data[excerpt]
-    true_labels = labels[excerpt]
+        indices = torch.randperm(len(data))
+    # slice indices
+    candidates_num = min(len(data), candidates_num)
+    excerpt = indices.narrow(0, 0, candidates_num)
+    # select items by indices
+    images = data.index_select(0, excerpt)
+    true_labels = labels.index_select(0, excerpt)
     return images, true_labels
 
 
@@ -151,8 +167,7 @@ def get_minibatch_iterator(images, labels, batchsize, shuffle=False):
         "Number of images and labels must be equal to make minibatches!"
 
     if shuffle:
-        indices = np.arange(len(images))
-        np.random.shuffle(indices)
+        indices = torch.randperm(len(images))
 
     for start_idx in range(0, len(images), batchsize):
         end_idx = start_idx + batchsize
@@ -160,37 +175,43 @@ def get_minibatch_iterator(images, labels, batchsize, shuffle=False):
             end_idx = start_idx + (len(images) % batchsize)
 
         if shuffle:
-            excerpt = indices[start_idx:end_idx]
+            excerpt = indices.narrow(0, start_idx, end_idx)
         else:
             excerpt = slice(start_idx, end_idx)
 
-        yield images[excerpt], labels[excerpt]
+        yield images.index_select(0, excerpt), labels.index_select(0, excerpt)
 
 
 def make_labels(labels_dense, num_classes):
     """Convert dense labels into one-hot labels."""
-    num_labels = labels_dense.shape[0]
-    index_offset = np.arange(num_labels) * num_classes
-    labels_one_hot = np.zeros((num_labels, num_classes))
-    labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1.0
+    labels_one_hot = torch.zeros((labels_dense.size(0), num_classes))
+    labels_one_hot.scatter_(1, labels_dense, 1)
     return labels_one_hot
 
 
 def guess_pseudo_labels(images, labels, out_1, out_2, threshold=0.9):
     """Guess labels of target dataset by the two outputs."""
-    # find prediction who are the same in two outputs
-    equal_idx = np.equal(np.argmax(out_1, 1), np.argmax(out_2, 1))
-    out_1 = out_1[equal_idx]
-    out_2 = out_2[equal_idx]
-    images = images[equal_idx]
-    labels = labels[equal_idx]
     # get prediction
-    pred_1 = np.max(out_1, 1)
-    pred_2 = np.max(out_2, 2)
+    _, pred_idx_1 = torch.max(out_1, 1)
+    _, pred_idx_2 = torch.max(out_2, 1)
+    # find prediction who are the same in two outputs
+    equal_idx = torch.nonzero(torch.eq(pred_idx_1, pred_idx_2)).squeeze()
+    out_1 = out_1[equal_idx, :]
+    out_2 = out_2[equal_idx, :]
+    images = images[equal_idx, :]
+    labels = labels[equal_idx]
     # filter indices by threshold
-    filtered_idx = np.max(np.vstack(pred_1, pred_2), 0) > threshold
+    # note that we use log(threshold) since the output is LogSoftmax
+    pred_1, _ = torch.max(out_1, 1)
+    pred_2, _ = torch.max(out_2, 1)
+    max_pred, _ = torch.max(torch.stack([pred_1, pred_2], 1), 1)
+    filtered_idx = torch.nonzero(max_pred > log(threshold)).squeeze()
     # get images, pseudo labels and true labels by indices
-    pseudo_labels = make_labels(
-        np.argmax(out_1[filtered_idx], 1), cfg.num_classes)
+    _, pred_idx = torch.max(out_1[filtered_idx, :], 1)
+    # no need to convert dense labels into one-hot labels
+    # pseudo_labels = make_labels(pred_idx, cfg.num_classes)
+    pseudo_labels = pred_idx
 
-    return images[filtered_idx], pseudo_labels, labels[filtered_idx]
+    return (images[filtered_idx, :],
+            pseudo_labels,
+            labels[filtered_idx])

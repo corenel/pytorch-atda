@@ -34,7 +34,7 @@ dropout_keep = {
 
 # params for training network
 num_gpu = 1
-num_epochs_pre = 5
+num_epochs_pre = 10
 num_epochs_adapt = 100
 num_target_init = 5000
 num_target_max = 40000

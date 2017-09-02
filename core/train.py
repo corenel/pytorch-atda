@@ -96,8 +96,7 @@ def genarate_labels(F, F_1, F_2, target_dataset):
 
     # get candidate samples
     images_tgt, labels_tgt = sample_candidatas(
-        data=target_dataset.train_data,
-        labels=target_dataset.train_labels,
+        dataset=target_dataset,
         candidates_num=cfg.num_target_init,
         shuffle=True)
 
@@ -106,12 +105,16 @@ def genarate_labels(F, F_1, F_2, target_dataset):
     labels_tgt = make_variable(labels_tgt)
 
     # forward networks
-    out_F_1 = F_1(F(images_tgt))
-    out_F_2 = F_2(F(images_tgt))
+    out_F = F(images_tgt)
+    out_F_1 = F_1(out_F)
+    out_F_2 = F_2(out_F)
 
     # guess pseudo labels
-    T_l, pseudo_labels, true_labels = guess_pseudo_labels(
-        images_tgt, labels_tgt, out_F_1.data.cpu(), out_F_2.data.cpu())
+    T_l, pseudo_labels, true_labels = \
+        guess_pseudo_labels(images_tgt.data,
+                            labels_tgt,
+                            out_F_1.data,
+                            out_F_2.data)
 
     return T_l, pseudo_labels, true_labels
 

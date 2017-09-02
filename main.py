@@ -55,6 +55,6 @@ if __name__ == '__main__':
     T_l, pseudo_labels, true_labels = \
         genarate_labels(F, F_1, F_2, tgt_dataset)
     print("Size: T_l [{}], pseudo_labels [{}], true_labels [{}]"
-          .format(T_l.shape, pseudo_labels.shape, true_labels.shape))
+          .format(T_l.size(), pseudo_labels.size(), true_labels.size()))
     print("Type: T_l [{}], pseudo_labels [{}], true_labels [{}]"
-          .format(T_l.dtype, pseudo_labels.dtype, true_labels.dtype))
+          .format(type(T_l), type(pseudo_labels), type(true_labels)))

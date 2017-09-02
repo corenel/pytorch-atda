@@ -3,6 +3,7 @@
 it's called as `shared network` in the paper.
 """
 
+import torch
 from torch import nn
 
 
@@ -17,9 +18,9 @@ class EncoderA(nn.Module):
 
         self.encoder = nn.Sequential(
             # 1st conv block
-            # input [1 x 28 x 28]
+            # input [3 x 28 x 28]
             # output [32 x 12 x 12]
-            nn.Conv2d(1, 32, 5, 1, 0, bias=False),
+            nn.Conv2d(3, 32, 5, 1, 0, bias=False),
             nn.ReLU(),
             nn.MaxPool2d(2),
             # 2nd conv block
@@ -33,6 +34,8 @@ class EncoderA(nn.Module):
 
     def forward(self, input):
         """Forward encoder."""
+        if input.size(1) == 1:
+            input = torch.cat([input, input, input], 1)
         out = self.encoder(input)
         return out.view(-1, 768)
 
