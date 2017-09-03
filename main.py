@@ -53,9 +53,11 @@ if __name__ == '__main__':
     # generate pseudo labels on target dataset
     print("=== Generate Pseudo Label ===")
     T_l, pseudo_labels, true_labels = \
-        genarate_labels(F, F_1, F_2, tgt_dataset)
-    print("Size: T_l [{}], pseudo_labels [{}], true_labels [{}]"
-          .format(T_l.size(), pseudo_labels.size(), true_labels.size()))
+        genarate_labels(F, F_1, F_2, tgt_dataset, cfg.num_target_init)
+    print(">>> Genrate pseudo labels [{}]".format(pseudo_labels.size(0)))
 
     # domain adapt between source and target datasets
-    domain_adapt(F, F_1, F_2, F_t, src_dataset, T_l, pseudo_labels)
+    print("=== Domain Adapt ===")
+    domain_adapt(F, F_1, F_2, F_t,
+                 src_dataset, tgt_dataset,
+                 T_l, pseudo_labels)

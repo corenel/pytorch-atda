@@ -163,10 +163,8 @@ def concat_dataset(images_a, labels_a, images_b, labels_b):
     return images, labels
 
 
-def sample_candidatas(dataset, candidates_num, shuffle=True):
+def sample_candidatas(data, labels, candidates_num, shuffle=True):
     """Sample images and labels from dataset."""
-    # get data and labels
-    data, labels = get_whole_dataset(dataset)
     # get indices
     indices = torch.arange(0, len(data))
     if shuffle:
