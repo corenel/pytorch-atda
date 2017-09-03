@@ -102,7 +102,7 @@ def genarate_labels(F, F_1, F_2, target_dataset, num_target):
     print("Num of sampled target data: {}".format(num_target))
     images_tgt, labels_tgt = sample_candidatas(
         data=images,
-        label=labels,
+        labels=labels,
         candidates_num=num_target,
         shuffle=True)
 
@@ -111,28 +111,27 @@ def genarate_labels(F, F_1, F_2, target_dataset, num_target):
         images_tgt, labels_tgt, cfg.batch_size, shuffle=False)
     out_F_1_total = None
     out_F_2_total = None
-    for step, (images, labels) in enumerate(data_loader):
+    for step, (images, _) in enumerate(data_loader):
         # convert into torch.autograd.Variable
-        images_tgt = make_variable(images_tgt)
-        labels_tgt = make_variable(labels_tgt)
+        images = make_variable(images)
         # forward networks
-        out_F = F(images_tgt)
+        out_F = F(images)
         out_F_1 = F_1(out_F)
         out_F_2 = F_2(out_F)
         # concat outputs
-        if step == 1:
-            out_F_1_total = out_F_1
-            out_F_2_total = out_F_2
+        if step == 0:
+            out_F_1_total = out_F_1.data
+            out_F_2_total = out_F_2.data
         else:
-            out_F_1_total = torch.cat([out_F_1_total, out_F_1], 0)
-            out_F_2_total = torch.cat([out_F_2_total, out_F_2], 0)
+            out_F_1_total = torch.cat([out_F_1_total, out_F_1.data], 0)
+            out_F_2_total = torch.cat([out_F_2_total, out_F_2.data], 0)
 
     # guess pseudo labels
     T_l, pseudo_labels, true_labels = \
-        guess_pseudo_labels(images_tgt.data,
+        guess_pseudo_labels(images_tgt,
                             labels_tgt,
-                            out_F_1_total.data,
-                            out_F_2_total.data)
+                            out_F_1_total,
+                            out_F_2_total)
 
     return T_l, pseudo_labels, true_labels
 
@@ -170,7 +169,7 @@ def domain_adapt(F, F_1, F_2, F_t,
                 # sample from T_l
                 images_tgt, labels_tgt = sample_candidatas(
                     data=target_images_labelled,
-                    label=target_labels_pseudo,
+                    labels=target_labels_pseudo,
                     candidates_num=cfg.batch_size,
                     shuffle=False)
 

@@ -173,9 +173,7 @@ def sample_candidatas(data, labels, candidates_num, shuffle=True):
     candidates_num = min(len(data), candidates_num)
     excerpt = indices.narrow(0, 0, candidates_num)
     # select items by indices
-    images = data.index_select(0, excerpt)
-    true_labels = labels.index_select(0, excerpt)
-    return images, true_labels
+    return data.index_select(0, excerpt), labels.index_select(0, excerpt)
 
 
 def get_minibatch_iterator(images, labels, batchsize, shuffle=False):
@@ -194,7 +192,7 @@ def get_minibatch_iterator(images, labels, batchsize, shuffle=False):
         if shuffle:
             excerpt = indices.narrow(0, start_idx, end_idx)
         else:
-            excerpt = slice(start_idx, end_idx)
+            excerpt = torch.arange(start_idx, end_idx).long()
 
         yield images.index_select(0, excerpt), labels.index_select(0, excerpt)
 
