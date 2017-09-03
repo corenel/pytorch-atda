@@ -42,9 +42,9 @@ class ClassifierA(nn.Module):
                 nn.Softmax()
             )
 
-    def forward(self, input):
+    def forward(self, x):
         """Forward classifier."""
-        out = self.classifier(input)
+        out = self.classifier(x)
         return out
 
 
@@ -64,9 +64,9 @@ class ClassifierB(nn.Module):
             nn.Softmax()
         )
 
-    def forward(self, input):
+    def forward(self, x):
         """Forward classifier."""
-        out = self.classifier(input)
+        out = self.classifier(x)
         return out
 
 
@@ -102,7 +102,7 @@ class ClassifierC(nn.Module):
                 nn.Softmax()
             )
 
-    def forward(self, input):
+    def forward(self, x):
         """Forward classifier."""
-        out = self.classifier(input)
+        out = self.classifier(x)
         return out

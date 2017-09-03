@@ -144,6 +144,25 @@ def get_whole_dataset(dataset):
         return images, labels
 
 
+def expand_single_channel(data):
+    """Expand single channel images into three channels."""
+    if data.dim() == 4 and data.size(1) == 1:
+        data = torch.cat([data, data, data], 1)
+    return data
+
+
+def concat_dataset(images_a, labels_a, images_b, labels_b):
+    """Concatenate images and labels of two datasets."""
+    # ensure the same size of images_a and images_b
+    expand_single_channel(images_a)
+    expand_single_channel(images_b)
+    # concatenate images and labels
+    images = torch.cat([images_a, images_b], 0)
+    labels = torch.cat([labels_a, labels_b], 0)
+
+    return images, labels
+
+
 def sample_candidatas(dataset, candidates_num, shuffle=True):
     """Sample images and labels from dataset."""
     # get data and labels

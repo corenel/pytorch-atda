@@ -4,8 +4,9 @@ import torch
 from torch import nn
 
 from misc import config as cfg
-from misc.utils import (calc_similiar_penalty, get_minibatch_iterator,
-                        get_optimizer, guess_pseudo_labels, make_variable,
+from misc.utils import (calc_similiar_penalty, concat_dataset,
+                        get_minibatch_iterator, get_optimizer,
+                        get_whole_dataset, guess_pseudo_labels, make_variable,
                         sample_candidatas, save_model)
 
 
@@ -119,6 +120,16 @@ def genarate_labels(F, F_1, F_2, target_dataset):
     return T_l, pseudo_labels, true_labels
 
 
-def domain_adapt(F, F_1, F_2, F_t, labelled_data, target_data_labelled):
+def domain_adapt(F, F_1, F_2, F_t,
+                 source_dataset, target_images_labelled, target_labels_pseudo):
     """Perform Doamin Adaptation between source and target domains."""
-    pass
+    # merge soruce data and target data
+    source_images, source_labels = get_whole_dataset(source_dataset)
+    images_merged, labels_merged = concat_dataset(source_images,
+                                                  source_labels,
+                                                  target_images_labelled,
+                                                  target_labels_pseudo)
+
+    # train
+    for epoch in range(cfg.num_epochs_adapt):
+        pass

@@ -56,5 +56,6 @@ if __name__ == '__main__':
         genarate_labels(F, F_1, F_2, tgt_dataset)
     print("Size: T_l [{}], pseudo_labels [{}], true_labels [{}]"
           .format(T_l.size(), pseudo_labels.size(), true_labels.size()))
-    print("Type: T_l [{}], pseudo_labels [{}], true_labels [{}]"
-          .format(type(T_l), type(pseudo_labels), type(true_labels)))
+
+    # domain adapt between source and target datasets
+    domain_adapt(F, F_1, F_2, F_t, src_dataset, T_l, pseudo_labels)
