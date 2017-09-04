@@ -2,13 +2,17 @@
 
 from core import domain_adapt, evaluate, genarate_labels, pre_train
 from misc import config as cfg
-from misc.utils import get_data_loader, init_model, init_random_seed
+from misc.utils import (enable_cudnn_benchmark, get_data_loader, init_model,
+                        init_random_seed)
 from models import ClassifierA, EncoderA
 
 if __name__ == '__main__':
     print("=== Init ===")
     # init random seed
     init_random_seed(cfg.manual_seed)
+
+    # speed up cudnn
+    enable_cudnn_benchmark()
 
     # load dataset
     src_dataset = get_data_loader(cfg.src_dataset, get_dataset=True)

@@ -57,6 +57,12 @@ def init_random_seed(manual_seed):
         torch.cuda.manual_seed_all(seed)
 
 
+def enable_cudnn_benchmark():
+    """Turn on the cudnn autotuner that selects efficient algorithms."""
+    if torch.cuda.is_available():
+        cudnn.benchmark = True
+
+
 def init_model(net, restore):
     """Init models with cuda and weights."""
     # init weights of model
@@ -67,7 +73,6 @@ def init_model(net, restore):
 
     # check if cuda is available
     if torch.cuda.is_available():
-        cudnn.benchmark = True
         net.cuda()
 
     return net
@@ -162,17 +167,17 @@ def concat_dataset(images_a, labels_a, images_b, labels_b):
     return images, labels
 
 
-def sample_candidatas(data, labels, candidates_num, shuffle=True):
+def sample_candidatas(images, labels, candidates_num, shuffle=True):
     """Sample images and labels from dataset."""
     # get indices
-    indices = torch.arange(0, len(data))
+    indices = torch.arange(0, len(images))
     if shuffle:
-        indices = torch.randperm(len(data))
+        indices = torch.randperm(len(images))
     # slice indices
-    candidates_num = min(len(data), candidates_num)
+    candidates_num = min(len(images), candidates_num)
     excerpt = indices.narrow(0, 0, candidates_num).long()
     # select items by indices
-    images_sampled = data.index_select(0, excerpt)
+    images_sampled = images.index_select(0, excerpt)
     labels_sampled = labels.index_select(0, excerpt)
     return images_sampled, labels_sampled
 
@@ -195,7 +200,10 @@ def get_minibatch_iterator(images, labels, batchsize, shuffle=False):
         else:
             excerpt = torch.arange(start_idx, end_idx).long()
 
-        yield images.index_select(0, excerpt), labels.index_select(0, excerpt)
+        images_batch = images.index_select(0, excerpt)
+        labels_batch = labels.index_select(0, excerpt)
+
+        yield images_batch, labels_batch
 
 
 def make_labels(labels_dense, num_classes):
@@ -214,8 +222,8 @@ def guess_pseudo_labels(images, labels, out_1, out_2, threshold=0.9):
     equal_idx = torch.nonzero(torch.eq(pred_idx_1, pred_idx_2)).squeeze()
     out_1 = out_1[equal_idx, :]
     out_2 = out_2[equal_idx, :]
-    images = images[equal_idx.cpu(), :]
-    labels = labels[equal_idx.cpu()]
+    images = images[equal_idx, :]
+    labels = labels[equal_idx]
     # filter indices by threshold
     # note that we use log(threshold) since the output is LogSoftmax
     pred_1, _ = torch.max(out_1, 1)
@@ -228,6 +236,6 @@ def guess_pseudo_labels(images, labels, out_1, out_2, threshold=0.9):
     # pseudo_labels = make_labels(pred_idx, cfg.num_classes)
     pseudo_labels = pred_idx
 
-    return (images[filtered_idx.cpu(), :],
-            pseudo_labels.cpu(),
-            labels[filtered_idx.cpu()])
+    return (images[filtered_idx, :],
+            pseudo_labels,
+            labels[filtered_idx])

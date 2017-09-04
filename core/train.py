@@ -5,8 +5,8 @@ from torch import nn
 
 from misc import config as cfg
 from misc.utils import (calc_similiar_penalty, concat_dataset,
-                        get_minibatch_iterator, get_optimizer,
-                        get_whole_dataset, guess_pseudo_labels, make_cuda,
+                        get_inf_iterator, get_minibatch_iterator,
+                        get_optimizer, get_whole_dataset, guess_pseudo_labels,
                         make_variable, sample_candidatas, save_model)
 
 
@@ -101,10 +101,7 @@ def genarate_labels(F, F_1, F_2, target_dataset, num_target):
     # get candidate samples
     print("Num of sampled target data: {}".format(num_target))
     images_tgt, labels_tgt = sample_candidatas(
-        data=images,
-        labels=labels,
-        candidates_num=num_target,
-        shuffle=True)
+        images, labels, num_target, shuffle=True)
 
     # get output of F_1 and F_2 on sampled target dataset
     data_loader = get_minibatch_iterator(
@@ -120,11 +117,13 @@ def genarate_labels(F, F_1, F_2, target_dataset, num_target):
         out_F_2 = F_2(out_F)
         # concat outputs
         if step == 0:
-            out_F_1_total = out_F_1.data
-            out_F_2_total = out_F_2.data
+            out_F_1_total = out_F_1.data.cpu()
+            out_F_2_total = out_F_2.data.cpu()
         else:
-            out_F_1_total = torch.cat([out_F_1_total, out_F_1.data], 0)
-            out_F_2_total = torch.cat([out_F_2_total, out_F_2.data], 0)
+            out_F_1_total = torch.cat(
+                [out_F_1_total, out_F_1.data.cpu()], 0)
+            out_F_2_total = torch.cat(
+                [out_F_2_total, out_F_2.data.cpu()], 0)
 
     # guess pseudo labels
     T_l, pseudo_labels, true_labels = \
@@ -163,15 +162,15 @@ def domain_adapt(F, F_1, F_2, F_t,
         F_t.train()
 
         for epoch in range(cfg.num_epochs_adapt):
-            data_loader = get_minibatch_iterator(
-                images_merged, labels_merged, cfg.batch_size, shuffle=True)
-            for step, (images, labels) in enumerate(data_loader):
+            source_data_loader = get_minibatch_iterator(
+                images_merged, labels_merged,
+                cfg.batch_size, shuffle=True)
+
+            for step, (images, labels) in enumerate(source_data_loader):
                 # sample from T_l
                 images_tgt, labels_tgt = sample_candidatas(
-                    data=target_images_labelled,
-                    labels=target_labels_pseudo,
-                    candidates_num=cfg.batch_size,
-                    shuffle=False)
+                    target_images_labelled, target_labels_pseudo,
+                    cfg.batch_size, shuffle=True)
 
                 # convert into torch.autograd.Variable
                 images = make_variable(images)
@@ -212,26 +211,28 @@ def domain_adapt(F, F_1, F_2, F_t,
                 # print step info
                 if ((step + 1) % cfg.log_step == 0):
                     print("K[{}/{}] Epoch [{}/{}] Step[{}/{}] Loss("
-                          "labelling={:.5f} target={:.5f}"
+                          "labelling={:.5f} target={:.5f})"
                           .format(k + 1,
                                   cfg.num_epochs_k,
                                   epoch + 1,
                                   cfg.num_epochs_adapt,
                                   step + 1,
-                                  len(images_merged),
+                                  len(images_merged) // cfg.batch_size,
                                   loss_labelling.data[0],
                                   loss_F_t.data[0],
                                   ))
 
         # re-compute the number of selected taget data
+        print("[ ] re-compute the number of selected taget data")
         num_target = (k + 2) * len(source_dataset) / 20
         num_target = min(num_target, cfg.num_target_max)
         print(">>> Set num of sampled target data: {}".format(num_target))
 
         # re-generate pseudo labels
-        T_l, pseudo_labels, true_labels = \
+        target_images_labelled, target_labels_pseudo, _ = \
             genarate_labels(F, F_1, F_2, target_dataset, num_target)
-        print(">>> Genrate pseudo labels [{}]".format(pseudo_labels.size(0)))
+        print(">>> Genrate pseudo labels [{}]".format(
+            target_labels_pseudo.size(0)))
 
         # re-merge soruce data and target data
         images_merged, labels_merged = concat_dataset(source_images,
