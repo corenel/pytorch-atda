@@ -114,7 +114,7 @@ class USPS(data.Dataset):
         return images, labels
 
 
-def get_usps(train, get_dataset=False):
+def get_usps(train, get_dataset=False, batch_size=cfg.batch_size):
     """Get USPS dataset loader."""
     # image pre-processing
     pre_process = transforms.Compose([transforms.ToTensor(),
@@ -133,6 +133,6 @@ def get_usps(train, get_dataset=False):
     else:
         usps_data_loader = torch.utils.data.DataLoader(
             dataset=usps_dataset,
-            batch_size=cfg.batch_size,
+            batch_size=batch_size,
             shuffle=True)
         return usps_data_loader

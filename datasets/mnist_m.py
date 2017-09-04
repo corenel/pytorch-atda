@@ -166,7 +166,7 @@ class MNIST_M(data.Dataset):
         print('Done!')
 
 
-def get_mnist_m(train, get_dataset=False):
+def get_mnist_m(train, get_dataset=False, batch_size=cfg.batch_size):
     """Get MNIST-M dataset loader."""
     # image pre-processing
     pre_process = transforms.Compose([transforms.ToTensor(),
@@ -185,6 +185,6 @@ def get_mnist_m(train, get_dataset=False):
     else:
         mnist_m_data_loader = torch.utils.data.DataLoader(
             dataset=mnist_m_dataset,
-            batch_size=cfg.batch_size,
+            batch_size=batch_size,
             shuffle=True)
         return mnist_m_data_loader

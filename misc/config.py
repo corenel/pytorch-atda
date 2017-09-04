@@ -2,8 +2,8 @@
 
 # params for dataset and data loader
 data_root = "data"
-src_dataset = "MNIST"
-tgt_dataset = "MNIST-M"
+source_dataset = "MNIST"
+target_dataset = "MNIST-M"
 dataset_mean_value = 0.5
 dataset_std_value = 0.5
 dataset_mean = (dataset_mean_value, dataset_mean_value, dataset_mean_value)

@@ -116,6 +116,17 @@ def get_data_loader(name, train=True, get_dataset=False):
         return get_usps(train, get_dataset)
 
 
+def make_data_loader(dataset, batch_size=cfg.batch_size,
+                     shuffle=True, sampler=None):
+    """Make dataloader from dataset."""
+    data_loader = torch.utils.data.DataLoader(
+        dataset=dataset,
+        batch_size=batch_size,
+        shuffle=shuffle if sampler is None else False,
+        sampler=sampler)
+    return data_loader
+
+
 def get_inf_iterator(data_loader):
     """Inf data iterator."""
     while True:
@@ -139,12 +150,12 @@ def calc_similiar_penalty(F_1, F_2):
     return similiar_penalty
 
 
-def get_whole_dataset(dataset):
-    """Get all images and labels of dataset."""
-    data_loader = torch.utils.data.DataLoader(dataset=dataset,
-                                              batch_size=len(dataset))
-    for images, labels in data_loader:
-        return images, labels
+# def get_whole_dataset(dataset):
+#     """Get all images and labels of dataset."""
+#     data_loader = torch.utils.data.DataLoader(dataset=dataset,
+#                                               batch_size=len(dataset))
+#     for images, labels in data_loader:
+#         return images, labels
 
 
 def expand_single_channel(data):
@@ -154,66 +165,81 @@ def expand_single_channel(data):
     else:
         return data
 
+# No need for this, just use torch.utils.data.ConcatDataset
+# def concat_dataset(images_a, labels_a, images_b, labels_b):
+#     """Concatenate images and labels of two datasets."""
+#     # ensure the same size of images_a and images_b
+#     images_a = expand_single_channel(images_a)
+#     images_b = expand_single_channel(images_b)
+#     # concatenate images and labels
+#     images = torch.cat([images_a, images_b], 0)
+#     labels = torch.cat([labels_a, labels_b], 0)
+#
+#     return images, labels
 
-def concat_dataset(images_a, labels_a, images_b, labels_b):
-    """Concatenate images and labels of two datasets."""
-    # ensure the same size of images_a and images_b
-    images_a = expand_single_channel(images_a)
-    images_b = expand_single_channel(images_b)
-    # concatenate images and labels
-    images = torch.cat([images_a, images_b], 0)
-    labels = torch.cat([labels_a, labels_b], 0)
 
-    return images, labels
+# Just use get_sampled_data_loader()
+# def sample_candidatas(images, labels, candidates_num, shuffle=True):
+#     """Sample images and labels from dataset."""
+#     # get indices
+#     indices = torch.arange(0, len(images))
+#     if shuffle:
+#         indices = torch.randperm(len(images))
+#     # slice indices
+#     candidates_num = min(len(images), candidates_num)
+#     excerpt = indices.narrow(0, 0, candidates_num).long()
+#     # select items by indices
+#     images_sampled = images.index_select(0, excerpt)
+#     labels_sampled = labels.index_select(0, excerpt)
+#     return images_sampled, labels_sampled
 
 
-def sample_candidatas(images, labels, candidates_num, shuffle=True):
-    """Sample images and labels from dataset."""
+def get_sampled_data_loader(dataset, candidates_num, shuffle=True):
+    """Get data loader for sampled dataset."""
     # get indices
-    indices = torch.arange(0, len(images))
+    indices = torch.arange(0, len(dataset))
     if shuffle:
-        indices = torch.randperm(len(images))
+        indices = torch.randperm(len(dataset))
     # slice indices
-    candidates_num = min(len(images), candidates_num)
+    candidates_num = min(len(dataset), candidates_num)
     excerpt = indices.narrow(0, 0, candidates_num).long()
-    # select items by indices
-    images_sampled = images.index_select(0, excerpt)
-    labels_sampled = labels.index_select(0, excerpt)
-    return images_sampled, labels_sampled
+    sampler = torch.utils.data.sampler.SubsetRandomSampler(excerpt)
+    return make_data_loader(dataset, sampler=sampler, shuffle=False)
+
+# Just use torch.utils.data.DataLoader for iteration
+# def get_minibatch_iterator(images, labels, batchsize, shuffle=False):
+#     """Get minibatch iterator with given images and labels."""
+#     assert len(images) == len(labels), \
+#         "Number of images and labels must be equal to make minibatches!"
+#
+#     if shuffle:
+#         indices = torch.randperm(len(images))
+#
+#     for start_idx in range(0, len(images), batchsize):
+#         end_idx = start_idx + batchsize
+#         if end_idx > len(images):
+#             end_idx = start_idx + (len(images) % batchsize)
+#
+#         if shuffle:
+#             excerpt = indices.narrow(0, start_idx, end_idx)
+#         else:
+#             excerpt = torch.arange(start_idx, end_idx).long()
+#
+#         images_batch = images.index_select(0, excerpt)
+#         labels_batch = labels.index_select(0, excerpt)
+#
+#         yield images_batch, labels_batch
 
 
-def get_minibatch_iterator(images, labels, batchsize, shuffle=False):
-    """Get minibatch iterator with given images and labels."""
-    assert len(images) == len(labels), \
-        "Number of images and labels must be equal to make minibatches!"
-
-    if shuffle:
-        indices = torch.randperm(len(images))
-
-    for start_idx in range(0, len(images), batchsize):
-        end_idx = start_idx + batchsize
-        if end_idx > len(images):
-            end_idx = start_idx + (len(images) % batchsize)
-
-        if shuffle:
-            excerpt = indices.narrow(0, start_idx, end_idx)
-        else:
-            excerpt = torch.arange(start_idx, end_idx).long()
-
-        images_batch = images.index_select(0, excerpt)
-        labels_batch = labels.index_select(0, excerpt)
-
-        yield images_batch, labels_batch
+# No need to convert dense labels into one-hot labels in this experiment
+# def make_labels(labels_dense, num_classes):
+#     """Convert dense labels into one-hot labels."""
+#     labels_one_hot = torch.zeros((labels_dense.size(0), num_classes))
+#     labels_one_hot.scatter_(1, labels_dense, 1)
+#     return labels_one_hot
 
 
-def make_labels(labels_dense, num_classes):
-    """Convert dense labels into one-hot labels."""
-    labels_one_hot = torch.zeros((labels_dense.size(0), num_classes))
-    labels_one_hot.scatter_(1, labels_dense, 1)
-    return labels_one_hot
-
-
-def guess_pseudo_labels(images, labels, out_1, out_2, threshold=0.9):
+def guess_pseudo_labels(out_1, out_2, threshold=0.9):
     """Guess labels of target dataset by the two outputs."""
     # get prediction
     _, pred_idx_1 = torch.max(out_1, 1)
@@ -222,8 +248,6 @@ def guess_pseudo_labels(images, labels, out_1, out_2, threshold=0.9):
     equal_idx = torch.nonzero(torch.eq(pred_idx_1, pred_idx_2)).squeeze()
     out_1 = out_1[equal_idx, :]
     out_2 = out_2[equal_idx, :]
-    images = images[equal_idx, :]
-    labels = labels[equal_idx]
     # filter indices by threshold
     # note that we use log(threshold) since the output is LogSoftmax
     pred_1, _ = torch.max(out_1, 1)
@@ -232,10 +256,8 @@ def guess_pseudo_labels(images, labels, out_1, out_2, threshold=0.9):
     filtered_idx = torch.nonzero(max_pred > log(threshold)).squeeze()
     # get images, pseudo labels and true labels by indices
     _, pred_idx = torch.max(out_1[filtered_idx, :], 1)
-    # no need to convert dense labels into one-hot labels
-    # pseudo_labels = make_labels(pred_idx, cfg.num_classes)
-    pseudo_labels = pred_idx
 
-    return (images[filtered_idx, :],
-            pseudo_labels,
-            labels[filtered_idx])
+    pseudo_labels = pred_idx
+    excerpt = equal_idx[filtered_idx]
+
+    return excerpt, pseudo_labels

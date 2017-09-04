@@ -12,15 +12,15 @@ if __name__ == '__main__':
     init_random_seed(cfg.manual_seed)
 
     # speed up cudnn
-    enable_cudnn_benchmark()
+    # enable_cudnn_benchmark()
 
     # load dataset
-    src_dataset = get_data_loader(cfg.src_dataset, get_dataset=True)
-    src_data_loader = get_data_loader(cfg.src_dataset)
-    src_data_loader_test = get_data_loader(cfg.src_dataset, train=False)
-    tgt_dataset = get_data_loader(cfg.tgt_dataset, get_dataset=True)
-    tgt_data_loader = get_data_loader(cfg.tgt_dataset)
-    tgt_data_loader_test = get_data_loader(cfg.tgt_dataset, train=False)
+    source_dataset = get_data_loader(cfg.source_dataset, get_dataset=True)
+    source_data_loader = get_data_loader(cfg.source_dataset)
+    source_data_loader_test = get_data_loader(cfg.source_dataset, train=False)
+    target_dataset = get_data_loader(cfg.target_dataset, get_dataset=True)
+    # target_data_loader = get_data_loader(cfg.target_dataset)
+    # target_data_loader_test = get_data_loader(cfg.target_dataset,train=False)
 
     # init models
     F = init_model(net=EncoderA(), restore=cfg.model_restore["F"])
@@ -46,22 +46,22 @@ if __name__ == '__main__':
     if cfg.model_trained["pretrain"]:
         print("pass")
     else:
-        pre_train(F, F_1, F_2, F_t, src_data_loader)
+        pre_train(F, F_1, F_2, F_t, source_data_loader)
         print(">>> evaluate F+F_1")
-        evaluate(F, F_1, src_data_loader_test)
+        evaluate(F, F_1, source_data_loader_test)
         print(">>> evaluate F+F_2")
-        evaluate(F, F_2, src_data_loader_test)
+        evaluate(F, F_2, source_data_loader_test)
         print(">>> evaluate F+F_t")
-        evaluate(F, F_t, src_data_loader_test)
+        evaluate(F, F_t, source_data_loader_test)
 
     # generate pseudo labels on target dataset
     print("=== Generate Pseudo Label ===")
-    T_l, pseudo_labels, true_labels = \
-        genarate_labels(F, F_1, F_2, tgt_dataset, cfg.num_target_init)
-    print(">>> Genrate pseudo labels [{}]".format(pseudo_labels.size(0)))
+    excerpt, pseudo_labels = \
+        genarate_labels(F, F_1, F_2, target_dataset, cfg.num_target_init)
+    print(">>> Genrate pseudo labels {}".format(
+        len(pseudo_labels)))
 
     # domain adapt between source and target datasets
     print("=== Domain Adapt ===")
     domain_adapt(F, F_1, F_2, F_t,
-                 src_dataset, tgt_dataset,
-                 T_l, pseudo_labels)
+                 source_dataset, target_dataset, excerpt, pseudo_labels)
