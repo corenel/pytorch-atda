@@ -36,7 +36,7 @@ class EncoderA(nn.Module):
 
     def forward(self, x):
         """Forward encoder."""
-        expand_single_channel(x)
+        x = expand_single_channel(x)
         out = self.encoder(x)
         return out.view(-1, 768)
 
@@ -77,7 +77,7 @@ class EncoderB(nn.Module):
 
     def forward(self, x):
         """Forward encoder."""
-        expand_single_channel(x)
+        x = expand_single_channel(x)
         out = self.encoder(x)
         return out
 

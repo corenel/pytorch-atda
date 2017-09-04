@@ -4,11 +4,9 @@ import os
 import random
 from math import log
 
-import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
-from PIL import Image
 from torch.autograd import Variable
 
 from datasets import get_mnist, get_mnist_m, get_svhn, get_usps
@@ -147,15 +145,16 @@ def get_whole_dataset(dataset):
 def expand_single_channel(data):
     """Expand single channel images into three channels."""
     if data.dim() == 4 and data.size(1) == 1:
-        data = torch.cat([data, data, data], 1)
-    return data
+        return torch.cat([data, data, data], 1)
+    else:
+        return data
 
 
 def concat_dataset(images_a, labels_a, images_b, labels_b):
     """Concatenate images and labels of two datasets."""
     # ensure the same size of images_a and images_b
-    expand_single_channel(images_a)
-    expand_single_channel(images_b)
+    images_a = expand_single_channel(images_a)
+    images_b = expand_single_channel(images_b)
     # concatenate images and labels
     images = torch.cat([images_a, images_b], 0)
     labels = torch.cat([labels_a, labels_b], 0)
@@ -171,9 +170,11 @@ def sample_candidatas(data, labels, candidates_num, shuffle=True):
         indices = torch.randperm(len(data))
     # slice indices
     candidates_num = min(len(data), candidates_num)
-    excerpt = indices.narrow(0, 0, candidates_num)
+    excerpt = indices.narrow(0, 0, candidates_num).long()
     # select items by indices
-    return data.index_select(0, excerpt), labels.index_select(0, excerpt)
+    images_sampled = data.index_select(0, excerpt)
+    labels_sampled = labels.index_select(0, excerpt)
+    return images_sampled, labels_sampled
 
 
 def get_minibatch_iterator(images, labels, batchsize, shuffle=False):
@@ -213,8 +214,8 @@ def guess_pseudo_labels(images, labels, out_1, out_2, threshold=0.9):
     equal_idx = torch.nonzero(torch.eq(pred_idx_1, pred_idx_2)).squeeze()
     out_1 = out_1[equal_idx, :]
     out_2 = out_2[equal_idx, :]
-    images = images[equal_idx, :]
-    labels = labels[equal_idx]
+    images = images[equal_idx.cpu(), :]
+    labels = labels[equal_idx.cpu()]
     # filter indices by threshold
     # note that we use log(threshold) since the output is LogSoftmax
     pred_1, _ = torch.max(out_1, 1)
@@ -227,6 +228,6 @@ def guess_pseudo_labels(images, labels, out_1, out_2, threshold=0.9):
     # pseudo_labels = make_labels(pred_idx, cfg.num_classes)
     pseudo_labels = pred_idx
 
-    return (images[filtered_idx, :],
-            pseudo_labels,
-            labels[filtered_idx])
+    return (images[filtered_idx.cpu(), :],
+            pseudo_labels.cpu(),
+            labels[filtered_idx.cpu()])

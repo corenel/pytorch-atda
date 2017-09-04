@@ -6,8 +6,8 @@ from torch import nn
 from misc import config as cfg
 from misc.utils import (calc_similiar_penalty, concat_dataset,
                         get_minibatch_iterator, get_optimizer,
-                        get_whole_dataset, guess_pseudo_labels, make_variable,
-                        sample_candidatas, save_model)
+                        get_whole_dataset, guess_pseudo_labels, make_cuda,
+                        make_variable, sample_candidatas, save_model)
 
 
 def pre_train(F, F_1, F_2, F_t, source_data):
@@ -200,7 +200,7 @@ def domain_adapt(F, F_1, F_2, F_t,
                 loss_labelling.backward()
 
                 # compute target specific loss
-                loss_F_t = criterion(out_F_t, labels)
+                loss_F_t = criterion(out_F_t, labels_tgt)
                 loss_F_t.backward()
 
                 # optimize
