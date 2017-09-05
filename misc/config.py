@@ -15,14 +15,18 @@ num_classes = 10
 # params for encoder (F)
 model_trained = {
     "pretrain": True,
-    "domain_adapt": False
+    "domain_adapt": True
 }
 
 model_restore = {
-    "F": "snapshots/pretrain-F-final.pt",
-    "F_1": "snapshots/pretrain-F_1-final.pt",
-    "F_2": "snapshots/pretrain-F_2-final.pt",
-    "F_t": "snapshots/pretrain-F_t-final.pt"
+    # "F": "snapshots/pretrain-F-final.pt",
+    # "F_1": "snapshots/pretrain-F_1-final.pt",
+    # "F_2": "snapshots/pretrain-F_2-final.pt",
+    # "F_t": "snapshots/pretrain-F_t-final.pt"
+    "F": "snapshots/adapt-F-80.pt",
+    "F_1": "snapshots/adapt-F_1-80.pt",
+    "F_2": "snapshots/adapt-F_2-80.pt",
+    "F_t": "snapshots/adapt-F_t-80.pt"
 }
 
 # params for classifier(F1, F2, Ft)
@@ -40,12 +44,12 @@ num_epochs_k = 100
 num_target_init = 5000
 num_target_max = 40000
 log_step = 100
-save_step = 5000
+save_step = 10
 manual_seed = None
 model_root = "snapshots"
 eval_only = False
 
 # params for optimizing models
-learning_rate = 0.01
+learning_rate = 1e-4
 beta1 = 0.9
 beta2 = 0.999

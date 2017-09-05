@@ -20,7 +20,7 @@ if __name__ == '__main__':
     source_data_loader_test = get_data_loader(cfg.source_dataset, train=False)
     target_dataset = get_data_loader(cfg.target_dataset, get_dataset=True)
     # target_data_loader = get_data_loader(cfg.target_dataset)
-    # target_data_loader_test = get_data_loader(cfg.target_dataset,train=False)
+    target_data_loader_test = get_data_loader(cfg.target_dataset, train=False)
 
     # init models
     F = init_model(net=EncoderA(), restore=cfg.model_restore["F"])
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     print(F_t)
 
     # pre-train on source dataset
-    print("=== Pre-train ===")
+    print("=== Pre-train networks ===")
     if cfg.model_trained["pretrain"]:
         print("pass")
     else:
@@ -54,14 +54,22 @@ if __name__ == '__main__':
         print(">>> evaluate F+F_t")
         evaluate(F, F_t, source_data_loader_test)
 
-    # generate pseudo labels on target dataset
-    print("=== Generate Pseudo Label ===")
-    excerpt, pseudo_labels = \
-        genarate_labels(F, F_1, F_2, target_dataset, cfg.num_target_init)
-    print(">>> Genrate pseudo labels {}".format(
-        len(pseudo_labels)))
+    print("=== Adapt F_t ===")
+    if cfg.model_trained["domain_adapt"]:
+        print("pass")
+    else:
+        # generate pseudo labels on target dataset
+        print("--- Generate Pseudo Label ---")
+        excerpt, pseudo_labels = \
+            genarate_labels(F, F_1, F_2, target_dataset, cfg.num_target_init)
+        print(">>> Genrate pseudo labels {}".format(
+            len(pseudo_labels)))
 
-    # domain adapt between source and target datasets
-    print("=== Domain Adapt ===")
-    domain_adapt(F, F_1, F_2, F_t,
-                 source_dataset, target_dataset, excerpt, pseudo_labels)
+        # domain adapt between source and target datasets
+        print("--- Domain Adapt ---")
+        domain_adapt(F, F_1, F_2, F_t,
+                     source_dataset, target_dataset, excerpt, pseudo_labels)
+
+    # test F_t on target test dataset
+    print("=== Test F_t ===")
+    evaluate(F, F_t, target_data_loader_test)

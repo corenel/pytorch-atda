@@ -246,8 +246,17 @@ def guess_pseudo_labels(out_1, out_2, threshold=0.9):
     _, pred_idx_2 = torch.max(out_2, 1)
     # find prediction who are the same in two outputs
     equal_idx = torch.nonzero(torch.eq(pred_idx_1, pred_idx_2)).squeeze()
-    out_1 = out_1[equal_idx, :]
-    out_2 = out_2[equal_idx, :]
+
+    try:
+        out_1 = out_1[equal_idx, :]
+        out_2 = out_2[equal_idx, :]
+    except IndexError:
+        print("out_1: {}".format(out_1.size()))
+        print("out_2: {}".format(out_2.size()))
+        print("equal_idx: {}".format(equal_idx.size()))
+        out_1 = out_1[equal_idx, :]
+        out_2 = out_2[equal_idx, :]
+
     # filter indices by threshold
     # note that we use log(threshold) since the output is LogSoftmax
     pred_1, _ = torch.max(out_1, 1)
