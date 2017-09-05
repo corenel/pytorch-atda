@@ -26,7 +26,7 @@ class DummyDataset(data.Dataset):
 
     def __len__(self):
         """Return size of dataset."""
-        return len(self.dataset)
+        return len(self.excerpt)
 
 
 def get_dummy(original_dataset, pseudo_labels, excerpt,

@@ -6,8 +6,6 @@ it's called as `shared network` in the paper.
 import torch
 from torch import nn
 
-from misc.utils import expand_single_channel
-
 
 class EncoderA(nn.Module):
     """Feature encoder class for MNIST -> MNIST-M experiment in ATDA."""
@@ -36,7 +34,7 @@ class EncoderA(nn.Module):
 
     def forward(self, x):
         """Forward encoder."""
-        x = expand_single_channel(x)
+        # x = expand_single_channel(x)
         out = self.encoder(x)
         return out.view(-1, 768)
 
@@ -77,7 +75,7 @@ class EncoderB(nn.Module):
 
     def forward(self, x):
         """Forward encoder."""
-        x = expand_single_channel(x)
+        # x = expand_single_channel(x)
         out = self.encoder(x)
         return out
 

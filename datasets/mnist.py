@@ -10,10 +10,13 @@ from misc import config as cfg
 def get_mnist(train, get_dataset=False, batch_size=cfg.batch_size):
     """Get MNIST dataset loader."""
     # image pre-processing
+    convert_to_3_channels = transforms.Lambda(
+        lambda x: torch.cat([x, x, x], 0))
     pre_process = transforms.Compose([transforms.ToTensor(),
                                       transforms.Normalize(
                                           mean=cfg.dataset_mean,
-                                          std=cfg.dataset_std)])
+                                          std=cfg.dataset_std),
+                                      convert_to_3_channels])
 
     # dataset and data loader
     mnist_dataset = datasets.MNIST(root=cfg.data_root,

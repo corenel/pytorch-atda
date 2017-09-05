@@ -158,19 +158,19 @@ def calc_similiar_penalty(F_1, F_2):
 #         return images, labels
 
 
-def expand_single_channel(data):
-    """Expand single channel images into three channels."""
-    if data.dim() == 4 and data.size(1) == 1:
-        return torch.cat([data, data, data], 1)
-    else:
-        return data
+# def expand_single_channel(data):
+#     """Expand single channel images into three channels."""
+#     if data.dim() == 4 and data.size(1) == 1:
+#         return torch.cat([data, data, data], 1)
+#     else:
+#         return data
 
 # No need for this, just use torch.utils.data.ConcatDataset
 # def concat_dataset(images_a, labels_a, images_b, labels_b):
 #     """Concatenate images and labels of two datasets."""
 #     # ensure the same size of images_a and images_b
-#     images_a = expand_single_channel(images_a)
-#     images_b = expand_single_channel(images_b)
+#     # images_a = expand_single_channel(images_a)
+#     # images_b = expand_single_channel(images_b)
 #     # concatenate images and labels
 #     images = torch.cat([images_a, images_b], 0)
 #     labels = torch.cat([labels_a, labels_b], 0)
