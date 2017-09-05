@@ -29,7 +29,7 @@ class DummyDataset(data.Dataset):
         return len(self.excerpt)
 
 
-def get_dummy(original_dataset, pseudo_labels, excerpt,
+def get_dummy(original_dataset, excerpt, pseudo_labels,
               get_dataset=False,
               batch_size=cfg.batch_size):
     """Get DummyDataset loader."""

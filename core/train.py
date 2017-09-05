@@ -210,7 +210,7 @@ def domain_adapt(F, F_1, F_2, F_t,
                                   epoch + 1,
                                   cfg.num_epochs_adapt,
                                   step + 1,
-                                  len(merged_dataloader) // cfg.batch_size,
+                                  len(merged_dataloader),
                                   loss_labelling.data[0],
                                   loss_F_t.data[0],
                                   ))
@@ -221,8 +221,8 @@ def domain_adapt(F, F_1, F_2, F_t,
         print(">>> Set num of sampled target data: {}".format(num_target))
 
         # re-generate pseudo labels
-        excerpt, pseudo_labels = \
-            genarate_labels(F, F_1, F_2, target_dataset, num_target)
+        excerpt, pseudo_labels = genarate_labels(
+            F, F_1, F_2, target_dataset, num_target)
         print(">>> Genrate pseudo labels [{}]".format(
             len(target_dataset_labelled)))
 
