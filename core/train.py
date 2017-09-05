@@ -216,7 +216,7 @@ def domain_adapt(F, F_1, F_2, F_t,
                                   ))
 
         # re-compute the number of selected taget data
-        num_target = (k + 2) * len(source_dataset) / 20
+        num_target = (k + 2) * len(source_dataset) // 20
         num_target = min(num_target, cfg.num_target_max)
         print(">>> Set num of sampled target data: {}".format(num_target))
 
