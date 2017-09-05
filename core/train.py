@@ -150,7 +150,7 @@ def domain_adapt(F, F_1, F_2, F_t,
                                     target_dataset_labelled])
 
     # start training
-    for k in range(cfg.num_epochs_adapt):
+    for k in range(cfg.num_epochs_k):
         # set train state for Dropout and BN layers
         F.train()
         F_1.train()
